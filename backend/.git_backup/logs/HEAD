@@ -1,0 +1,4 @@
+0000000000000000000000000000000000000000 c7086c041f490029b6a9386fd42dff8ed754a149 kushal-pandey <kushalpandey10january@gmail.com> 1771236471 +0530	commit (initial): Day 1: Setup backend, MongoDB connection, Task model and POST route
+c7086c041f490029b6a9386fd42dff8ed754a149 0000000000000000000000000000000000000000 kushal-pandey <kushalpandey10january@gmail.com> 1771236727 +0530	Branch: renamed refs/heads/master to refs/heads/main
+0000000000000000000000000000000000000000 c7086c041f490029b6a9386fd42dff8ed754a149 kushal-pandey <kushalpandey10january@gmail.com> 1771236727 +0530	Branch: renamed refs/heads/master to refs/heads/main
+c7086c041f490029b6a9386fd42dff8ed754a149 1d5582643599dade7cb6096d7ab970c57b888456 kushal-pandey <kushalpandey10january@gmail.com> 1771237059 +0530	commit: Add README for Day 1 backend
