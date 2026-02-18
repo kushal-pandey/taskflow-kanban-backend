@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const taskRoutes = require("./routes/taskRoutes");
+const authRoutes = require("./routes/authRoutes");
+
 
 
 
@@ -16,23 +18,10 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
 app.get("/", (req, res) => {
-  res.json([
-    {
-      _id: "1",
-      title: "Learn React",
-      description: "Understand useState and useEffect",
-      status: "Todo"
-    },
-    {
-      _id: "2",
-      title: "Build Kanban",
-      description: "Create task board UI",
-      status: "In Progress"
-    }
-  ]);
   res.send("API Running...");
 });
 

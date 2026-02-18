@@ -1,27 +1,52 @@
 const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
+const protect = require("../middleware/authMiddleware");
+
+
 
 // GET all tasks
-router.get("/", async (req, res) => {
-  try {
-    const tasks = await Task.find();
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.get("/", protect, async (req, res) => {
+  const tasks = await Task.find({ user: req.user._id });
+  res.json(tasks);
 });
 
-// Create Task
-router.post("/", async (req, res) => {
-  console.log("POST /api/tasks hit", req.body);
-  try {
-    const task = new Task(req.body);
-    const savedTask = await task.save();
-    res.status(201).json(savedTask);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+
+// POST create new task
+router.post("/", protect, async (req, res) => {
+  const { title, description, status } = req.body;
+
+  const newTask = new Task({
+    title,
+    description,
+    status,
+    user: req.user._id,
+  });
+
+  const savedTask = await newTask.save();
+  res.json(savedTask);
 });
+
+
+// PUT update task (status change)
+router.put("/:id", protect, async (req, res) => {
+  const { status } = req.body;
+
+  const updatedTask = await Task.findByIdAndUpdate(
+    req.params.id,
+    { status },
+    { new: true }
+  );
+
+  res.json(updatedTask);
+});
+
+
+// DELETE task
+router.delete("/:id", protect, async (req, res) => {
+  await Task.findByIdAndDelete(req.params.id);
+  res.json({ message: "Task deleted" });
+});
+
 
 module.exports = router;
