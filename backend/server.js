@@ -5,6 +5,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const taskRoutes = require("./routes/taskRoutes");
 const authRoutes = require("./routes/authRoutes");
+const boardRoutes = require("./routes/boardRoutes");
 
 
 
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/boards", boardRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Running...");
