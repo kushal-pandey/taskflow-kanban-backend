@@ -1,126 +1,176 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "./api";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+} from "@hello-pangea/dnd";
 
-const apiUrl = "http://localhost:5000/api/tasks";
+const boardId = "69ad24d636933946e2cd4420";
 
 function App() {
-  const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [columns, setColumns] = useState([]);
+  const [tasks, setTasks] = useState({});
 
-  // Fetch tasks
-  const fetchTasks = async () => {
+  const fetchTasks = async (columnId) => {
     try {
-      const res = await axios.get(apiUrl);
-      setTasks(res.data);
+      const res = await api.get(`/tasks/${columnId}`);
+
+      setTasks((prev) => ({
+        ...prev,
+        [columnId]: res.data,
+      }));
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
+    const fetchColumns = async () => {
+      try {
+        const res = await api.get(`/columns/${boardId}`);
+
+        setColumns(res.data);
+
+        res.data.forEach((column) => {
+          fetchTasks(column._id);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchColumns();
   }, []);
 
-  // Add task
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const addTask = async (columnId, title) => {
+    if (!title) return;
 
     try {
-      await axios.post(apiUrl, {
+      await api.post("/tasks", {
         title,
-        description,
-        status: "todo",
+        description: "",
+        column: columnId,
       });
 
-      setTitle("");
-      setDescription("");
-      fetchTasks();
+      fetchTasks(columnId);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Move task
-  const moveTask = async (id, newStatus) => {
+  const deleteTask = async (taskId, columnId) => {
     try {
-      await axios.put(`${apiUrl}/${id}`, {
-        status: newStatus,
+      await api.delete(`/tasks/${taskId}`);
+      fetchTasks(columnId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const moveTask = async (taskId, oldColumnId, newColumnId) => {
+    try {
+      await api.put(`/tasks/${taskId}`, {
+        column: newColumnId,
       });
-      fetchTasks();
+
+      fetchTasks(oldColumnId);
+      fetchTasks(newColumnId);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Delete task
-  const deleteTask = async (id) => {
-    try {
-      await axios.delete(`${apiUrl}/${id}`);
-      fetchTasks();
-    } catch (err) {
-      console.error(err);
-    }
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const sourceColumn = result.source.droppableId;
+    const destColumn = result.destination.droppableId;
+
+    if (sourceColumn === destColumn) return;
+
+    const task = tasks[sourceColumn][result.source.index];
+
+    moveTask(task._id, sourceColumn, destColumn);
   };
-
-  const renderColumn = (status, titleText) => (
-    <div style={{ flex: 1, background: "#f4f4f4", padding: "15px", borderRadius: "8px" }}>
-      <h2>{titleText}</h2>
-      {tasks
-        .filter((task) => task.status === status)
-        .map((task) => (
-          <div
-            key={task._id}
-            style={{
-              background: "white",
-              padding: "10px",
-              marginBottom: "10px",
-              borderRadius: "6px",
-            }}
-          >
-            <h4>{task.title}</h4>
-            <p>{task.description}</p>
-
-            <button onClick={() => moveTask(task._id, "todo")}>Todo</button>
-            <button onClick={() => moveTask(task._id, "in-progress")}>
-              In Progress
-            </button>
-            <button onClick={() => moveTask(task._id, "done")}>Done</button>
-            <button onClick={() => deleteTask(task._id)}>Delete</button>
-          </div>
-        ))}
-    </div>
-  );
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Taskflow Kanban</h1>
+      <h1>TaskFlow Kanban</h1>
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
-        <input
-          type="text"
-          placeholder="Task Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <br /><br />
-        <input
-          type="text"
-          placeholder="Task Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <br /><br />
-        <button type="submit">Add Task</button>
-      </form>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div style={{ display: "flex", gap: "20px" }}>
+          {columns.map((column) => (
+            <Droppable droppableId={column._id} key={column._id}>
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  style={{
+                    flex: 1,
+                    background: "#f1f5f9",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    minHeight: "300px",
+                  }}
+                >
+                  <h2>{column.title}</h2>
 
-      <div style={{ display: "flex", gap: "20px" }}>
-        {renderColumn("todo", "Todo")}
-        {renderColumn("in-progress", "In Progress")}
-        {renderColumn("done", "Done")}
-      </div>
+                  <input
+                    placeholder="New task..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        addTask(column._id, e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "6px",
+                      marginBottom: "10px",
+                    }}
+                  />
+
+                  {(tasks[column._id] || []).map((task, index) => (
+                    <Draggable
+                      key={task._id}
+                      draggableId={task._id}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            background: "white",
+                            padding: "10px",
+                            marginBottom: "10px",
+                            borderRadius: "6px",
+                            ...provided.draggableProps.style,
+                          }}
+                        >
+                          <h4>{task.title}</h4>
+
+                          <button
+                            onClick={() =>
+                              deleteTask(task._id, column._id)
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+      </DragDropContext>
     </div>
   );
 }

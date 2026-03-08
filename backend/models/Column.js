@@ -1,30 +1,22 @@
 const mongoose = require("mongoose");
 
-const taskSchema = new mongoose.Schema(
+const columnSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
       trim: true,
     },
-
-    description: {
-      type: String,
-      default: "",
-    },
-
-    column: {
+    board: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Column",
+      ref: "Board",
       required: true,
     },
-
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
     order: {
       type: Number,
       default: 0,
@@ -33,4 +25,4 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Task", taskSchema);
+module.exports = mongoose.model("Column", columnSchema);
