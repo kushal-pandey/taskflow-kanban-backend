@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import api from "./api";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import Login from "./Login";
+import Navbar from "./Navbar";
 
 const boardId = "69ad24d636933946e2cd4420";
 
 function App() {
   const [columns, setColumns] = useState([]);
   const [tasks, setTasks] = useState({});
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const fetchTasks = async (columnId) => {
     try {
@@ -26,6 +28,7 @@ function App() {
   };
 
   useEffect(() => {
+    if (!isLoggedIn) return;
     const fetchColumns = async () => {
       try {
         const res = await api.get(`/columns/${boardId}`);
@@ -41,7 +44,7 @@ function App() {
     };
 
     fetchColumns();
-  }, []);
+  }, [isLoggedIn]);
 
   const addTask = async (columnId, title) => {
     if (!title) return;
@@ -81,6 +84,20 @@ function App() {
     }
   };
 
+  const updateTask = async () => {
+    try {
+      await api.put(`/tasks/${selectedTask._id}`, {
+        title: editTitle,
+        description: editDescription,
+      });
+
+      fetchTasks(selectedTask.column);
+      setSelectedTask(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -94,7 +111,13 @@ function App() {
     moveTask(task._id, sourceColumn, destColumn);
   };
 
+  if (!isLoggedIn) {
+    return <Login setIsLoggedIn={setIsLoggedIn} />;
+  }
+
   return (
+    <>
+    <Navbar setIsLoggedIn={setIsLoggedIn} />
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>TaskFlow Kanban</h1>
 
@@ -150,12 +173,19 @@ function App() {
                             ...provided.draggableProps.style,
                           }}
                         >
-                          <h4>{task.title}</h4>
+                          <h4
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setEditTitle(task.title);
+                              setEditDescription(task.description || "");
+                            }}
+                          >
+                            {task.title}
+                          </h4>
 
                           <button
-                            onClick={() =>
-                              deleteTask(task._id, column._id)
-                            }
+                            onClick={() => deleteTask(task._id, column._id)}
                           >
                             Delete
                           </button>
@@ -171,7 +201,55 @@ function App() {
           ))}
         </div>
       </DragDropContext>
+      {selectedTask && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "20px",
+              borderRadius: "8px",
+              width: "300px",
+            }}
+          >
+            <h3>Edit Task</h3>
+
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              style={{ width: "100%", marginBottom: "10px" }}
+            />
+
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              style={{ width: "100%", marginBottom: "10px" }}
+            />
+
+            <button onClick={updateTask}>Save</button>
+
+            <button
+              onClick={() => setSelectedTask(null)}
+              style={{ marginLeft: "10px" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }
 
