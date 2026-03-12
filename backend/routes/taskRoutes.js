@@ -3,7 +3,6 @@ const router = express.Router();
 const Task = require("../models/Task");
 const protect = require("../middleware/authMiddleware");
 
-
 // GET tasks for a column
 router.get("/:columnId", protect, async (req, res) => {
   const tasks = await Task.find({
@@ -14,15 +13,16 @@ router.get("/:columnId", protect, async (req, res) => {
   res.json(tasks);
 });
 
-
 // CREATE new task
 router.post("/", protect, async (req, res) => {
-  const { title, description, column } = req.body;
+  const { title, description, column, priority, dueDate } = req.body;
 
   const newTask = new Task({
     title,
     description,
     column,
+    priority,
+    dueDate,
     user: req.user._id,
   });
 
@@ -30,18 +30,16 @@ router.post("/", protect, async (req, res) => {
   res.json(savedTask);
 });
 
-
 // UPDATE task
 router.put("/:id", protect, async (req, res) => {
   const updatedTask = await Task.findOneAndUpdate(
     { _id: req.params.id, user: req.user._id },
     req.body,
-    { new: true }
+    { new: true },
   );
 
   res.json(updatedTask);
 });
-
 
 // DELETE task
 router.delete("/:id", protect, async (req, res) => {
