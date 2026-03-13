@@ -4,8 +4,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Login from "./Login";
 import Navbar from "./Navbar";
 
-const boardId = "69ad24d636933946e2cd4420";
-
 function App() {
   const [newTitle, setNewTitle] = useState({});
   const [columns, setColumns] = useState([]);
@@ -17,6 +15,8 @@ function App() {
   const [editDueDate, setEditDueDate] = useState("");
   const [newPriority, setNewPriority] = useState({});
   const [newDueDate, setNewDueDate] = useState({});
+  
+
 
   const fetchTasks = async (columnId) => {
     try {
@@ -34,13 +34,19 @@ function App() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const fetchColumns = async () => {
+    const loadBoard = async () => {
       try {
-        const res = await api.get(`/columns/${boardId}`);
+        const boardRes = await api.get("/boards");
+        const board = boardRes.data[0];
 
-        setColumns(res.data);
+        if (!board) return;
 
-        res.data.forEach((column) => {
+        
+
+        const columnRes = await api.get(`/columns/${board._id}`);
+        setColumns(columnRes.data);
+
+        columnRes.data.forEach((column) => {
           fetchTasks(column._id);
         });
       } catch (err) {
@@ -48,7 +54,7 @@ function App() {
       }
     };
 
-    fetchColumns();
+    loadBoard();
   }, [isLoggedIn]);
 
   const addTask = async (
@@ -263,21 +269,30 @@ function App() {
                               {task.title}
                             </h4>
 
-                            <p
+                            <span
                               style={{
+                                display: "inline-block",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
                                 fontSize: "12px",
                                 fontWeight: "bold",
                                 marginBottom: "6px",
+                                backgroundColor:
+                                  task.priority === "High"
+                                    ? "#fecaca"
+                                    : task.priority === "Low"
+                                      ? "#bbf7d0"
+                                      : "#fde68a",
                                 color:
                                   task.priority === "High"
-                                    ? "red"
+                                    ? "#991b1b"
                                     : task.priority === "Low"
-                                      ? "green"
-                                      : "orange",
+                                      ? "#065f46"
+                                      : "#92400e",
                               }}
                             >
-                              Priority: {task.priority || "Medium"}
-                            </p>
+                              {task.priority || "Medium"}
+                            </span>
 
                             {task.dueDate && (
                               <p style={{ fontSize: "12px", color: "gray" }}>

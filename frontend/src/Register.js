@@ -6,7 +6,6 @@ function Register({ setIsRegistering }) {
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
-    
     if (!email || !password) {
       alert("Please fill all fields");
       return;
@@ -20,9 +19,18 @@ function Register({ setIsRegistering }) {
 
       alert("Registration successful. Please login.");
       setIsRegistering(false);
-    } catch (err) {
-      console.error(err);
-      alert("Registration failed");
+    } catch (error) {
+      console.log("====== REGISTER ERROR ======");
+
+      if (error.response) {
+        console.log("Backend error:", error.response.data);
+        alert(error.response.data.message || "Registration failed");
+      } else {
+        console.log("Error:", error);
+        alert("Registration failed");
+      }
+
+      console.log("====== END ERROR ======");
     }
   };
 
@@ -44,15 +52,14 @@ function Register({ setIsRegistering }) {
           borderRadius: "8px",
         }}
       >
+        {" "}
         <h2>Register</h2>
-
         <input
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
         />
-
         <input
           type="password"
           placeholder="Password"
@@ -60,11 +67,9 @@ function Register({ setIsRegistering }) {
           onChange={(e) => setPassword(e.target.value)}
           style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
         />
-
         <button onClick={handleRegister} style={{ width: "100%" }}>
           Register
         </button>
-
         <p
           style={{ marginTop: "10px", cursor: "pointer", color: "blue" }}
           onClick={() => setIsRegistering(false)}
