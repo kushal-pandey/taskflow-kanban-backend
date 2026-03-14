@@ -3,7 +3,7 @@ const router = express.Router();
 const Task = require("../models/Task");
 const protect = require("../middleware/authMiddleware");
 
-// GET tasks for a column
+// GET tasks for column
 router.get("/:columnId", protect, async (req, res) => {
   const tasks = await Task.find({
     column: req.params.columnId,
@@ -13,16 +13,21 @@ router.get("/:columnId", protect, async (req, res) => {
   res.json(tasks);
 });
 
-// CREATE new task
+// CREATE task
 router.post("/", protect, async (req, res) => {
-  const { title, description, column, priority, dueDate } = req.body;
+  const { title, column, priority, dueDate } = req.body;
+
+  const taskCount = await Task.countDocuments({
+    column,
+    user: req.user._id,
+  });
 
   const newTask = new Task({
     title,
-    description,
     column,
     priority,
     dueDate,
+    order: taskCount,
     user: req.user._id,
   });
 
@@ -35,7 +40,7 @@ router.put("/:id", protect, async (req, res) => {
   const updatedTask = await Task.findOneAndUpdate(
     { _id: req.params.id, user: req.user._id },
     req.body,
-    { new: true },
+    { returnDocument: "after" }
   );
 
   res.json(updatedTask);

@@ -5,7 +5,6 @@ const taskSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true,
     },
 
     description: {
@@ -19,12 +18,6 @@ const taskSchema = new mongoose.Schema(
       required: true,
     },
 
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
     priority: {
       type: String,
       enum: ["Low", "Medium", "High"],
@@ -33,12 +26,17 @@ const taskSchema = new mongoose.Schema(
 
     dueDate: {
       type: Date,
-      default: null,
     },
 
     order: {
       type: Number,
       default: 0,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
