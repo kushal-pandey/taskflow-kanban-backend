@@ -1,38 +1,38 @@
 import { useState } from "react";
-import api from "./api";
-import Register from "./Register";
+import api from "./api.js";
 
-function Login({ setIsLoggedIn }) {
+function Register({ setIsRegistering }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!email || !password) {
       alert("Please fill all fields");
       return;
     }
-    
+
     try {
-      const res = await api.post("/auth/login", {
+      await api.post("/auth/register", {
         email,
         password,
       });
 
-      const token = res.data.token;
+      alert("Registration successful. Please login.");
+      setIsRegistering(false);
+    } catch (error) {
+      console.log("====== REGISTER ERROR ======");
 
-      localStorage.setItem("token", token);
+      if (error.response) {
+        console.log("Backend error:", error.response.data);
+        alert(error.response.data.message || "Registration failed");
+      } else {
+        console.log("Error:", error);
+        alert("Registration failed");
+      }
 
-      setIsLoggedIn(true);
-    } catch (err) {
-      console.error(err);
-      alert("Login failed");
+      console.log("====== END ERROR ======");
     }
   };
-
-  if (isRegistering) {
-    return <Register setIsRegistering={setIsRegistering} />;
-  }
 
   return (
     <div
@@ -52,36 +52,33 @@ function Login({ setIsLoggedIn }) {
           borderRadius: "8px",
         }}
       >
-        <h2>Login</h2>
-
+        {" "}
+        <h2>Register</h2>
         <input
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
         />
-
         <input
-          placeholder="Password"
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
         />
-
-        <button onClick={handleLogin} style={{ width: "100%" }}>
-          Login
+        <button onClick={handleRegister} style={{ width: "100%" }}>
+          Register
         </button>
-
         <p
           style={{ marginTop: "10px", cursor: "pointer", color: "blue" }}
-          onClick={() => setIsRegistering(true)}
+          onClick={() => setIsRegistering(false)}
         >
-          Don't have an account? Register
+          Already have an account? Login
         </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;
