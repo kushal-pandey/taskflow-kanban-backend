@@ -7,8 +7,9 @@ const taskRoutes = require("./routes/taskRoutes");
 const authRoutes = require("./routes/authRoutes");
 const boardRoutes = require("./routes/boardRoutes");
 const columnRoutes = require("./routes/columnRoutes");
-
-
+const noteRoutes = require("./routes/noteRoutes");
+const stickerRoutes = require("./routes/stickerRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 
 
@@ -24,6 +25,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/columns", columnRoutes);
+app.use("/api/notes", noteRoutes);
+app.use("/api/stickers", stickerRoutes);
+app.use("/api/analytics", analyticsRoutes);
+
 
 
 app.get("/", (req, res) => {

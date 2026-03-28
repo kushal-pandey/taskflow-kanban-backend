@@ -4,8 +4,9 @@ import Column from "./components/Column.jsx";
 import Navbar from "./components/Navbar.jsx";
 import { DragDropContext } from "@hello-pangea/dnd";
 import Modal from "./components/Modal.jsx";
+import TaskModal from "./components/TaskModal.jsx";
 
-const Board = ({ setIsLoggedIn }) => {
+const Board = ({ setIsLoggedIn, setCurrentView }) => {
   const [columns, setColumns] = useState([]);
   const [tasks, setTasks] = useState({});
   const [newTitle, setNewTitle] = useState({});
@@ -15,6 +16,9 @@ const Board = ({ setIsLoggedIn }) => {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const [editColor, setEditColor] = useState("");
+  const [notes, setNotes] = useState([]);
+  const [stickers, setStickers] = useState([]);
 
   const fetchTasks = async (columnId) => {
     const res = await api.get(`/tasks/${columnId}`);
@@ -62,6 +66,7 @@ const Board = ({ setIsLoggedIn }) => {
         title: editTitle,
         description: editDescription,
         dueDate: editDueDate,
+        color: editColor,
       });
 
       fetchBoard();
@@ -84,17 +89,35 @@ const Board = ({ setIsLoggedIn }) => {
     fetchBoard();
   };
 
+  const openTaskDetails = async (task) => {
+    setSelectedTask(task);
+    setEditTitle(task.title);
+    setEditDescription(task.description || "");
+    setEditDueDate(task.dueDate ? task.dueDate.substring(0, 10) : "");
+    setEditColor(task.color || "#3b82f6");
+
+    try {
+      const notesRes = await api.get(`/notes/${task._id}`);
+      const stickersRes = await api.get(`/stickers/${task._id}`);
+      setNotes(notesRes.data);
+      setStickers(stickersRes.data);
+    } catch (error) {
+      console.error("Error fetching task details:", error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar setIsLoggedIn={setIsLoggedIn} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      <Navbar setIsLoggedIn={setIsLoggedIn} setCurrentView={setCurrentView} />
 
       <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
           TaskFlow Kanban
         </h1>
+        <p className="text-slate-400 mb-8">Manage your tasks with elegant drag and drop</p>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 overflow-x-auto">
+          <div className="flex gap-6 overflow-x-auto pb-6">
             {columns.map((column) => (
               <Column
                 key={column._id}
@@ -108,58 +131,31 @@ const Board = ({ setIsLoggedIn }) => {
                 setNewDueDate={setNewDueDate}
                 addTask={addTask}
                 deleteTask={deleteTask}
-                setSelectedTask={(task) => {
-                  setSelectedTask(task);
-                  setEditTitle(task.title);
-                  setEditDescription(task.description || "");
-                  setEditDueDate(
-                    task.dueDate ? task.dueDate.substring(0, 10) : "",
-                  );
-                }}
+                setSelectedTask={openTaskDetails}
               />
             ))}
           </div>
         </DragDropContext>
       </div>
-      <Modal isOpen={!!selectedTask} onClose={() => setSelectedTask(null)}>
-        <h2 className="text-xl font-semibold mb-4">Edit Task</h2>
 
-        <input
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-          className="w-full mb-3 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-
-        <textarea
-          value={editDescription}
-          onChange={(e) => setEditDescription(e.target.value)}
-          className="w-full mb-3 p-2 border rounded-lg"
-          placeholder="Description"
-        />
-
-        <input
-          type="date"
-          value={editDueDate}
-          onChange={(e) => setEditDueDate(e.target.value)}
-          className="w-full mb-4 p-2 border rounded-lg"
-        />
-
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setSelectedTask(null)}
-            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={updateTask}
-            className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-      </Modal>
+      <TaskModal
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        editTitle={editTitle}
+        setEditTitle={setEditTitle}
+        editDescription={editDescription}
+        setEditDescription={setEditDescription}
+        editDueDate={editDueDate}
+        setEditDueDate={setEditDueDate}
+        editColor={editColor}
+        setEditColor={setEditColor}
+        onUpdate={updateTask}
+        notes={notes}
+        stickers={stickers}
+        setNotes={setNotes}
+        setStickers={setStickers}
+      />
     </div>
   );
 };

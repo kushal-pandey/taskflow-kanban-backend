@@ -24,6 +24,11 @@ const taskSchema = new mongoose.Schema(
       default: "Medium",
     },
 
+    color: {
+      type: String,
+      default: "#3b82f6",
+    },
+
     dueDate: {
       type: Date,
     },
@@ -38,6 +43,13 @@ const taskSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    completed: {
+      type: Boolean,
+      default: false,
+    },
+
+    tags: [String],
   },
   { timestamps: true }
 );
