@@ -77,16 +77,43 @@ const Board = ({ setIsLoggedIn, setCurrentView }) => {
   };
 
   const onDragEnd = async (result) => {
-    if (!result.destination) return;
+    const { destination, source, draggableId } = result;
 
-    const taskId = result.draggableId;
-    const newColumnId = result.destination.droppableId;
+    if (!destination) return;
 
-    await api.put(`/tasks/${taskId}`, {
-      column: newColumnId,
-    });
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
 
-    fetchBoard();
+    const sourceColumnId = source.droppableId;
+    const destColumnId = destination.droppableId;
+
+    const sourceTasks = Array.from(tasks[sourceColumnId] || []);
+    const destTasks =
+      sourceColumnId === destColumnId
+        ? sourceTasks
+        : Array.from(tasks[destColumnId] || []);
+
+    const [movedTask] = sourceTasks.splice(source.index, 1);
+    destTasks.splice(destination.index, 0, movedTask);
+
+    setTasks((prev) => ({
+      ...prev,
+      [sourceColumnId]: sourceTasks,
+      [destColumnId]: destTasks,
+    }));
+
+    try {
+      await api.put(`/tasks/${draggableId}`, {
+        column: destColumnId,
+      });
+    } catch (err) {
+      console.error("Failed to move task:", err);
+      fetchBoard();
+    }
   };
 
   const openTaskDetails = async (task) => {
@@ -114,7 +141,9 @@ const Board = ({ setIsLoggedIn, setCurrentView }) => {
         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
           TaskFlow Kanban
         </h1>
-        <p className="text-slate-400 mb-8">Manage your tasks with elegant drag and drop</p>
+        <p className="text-slate-400 mb-8">
+          Manage your tasks with elegant drag and drop
+        </p>
 
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex gap-6 overflow-x-auto pb-6">
