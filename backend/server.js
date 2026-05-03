@@ -17,7 +17,10 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://taskflow-kanban-pi.vercel.app",
+    origin: [
+      "https://taskflow-kanban-pi.vercel.app", // Your production frontend
+      "http://localhost:5173", // Your local Vite development server
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }),

@@ -30,8 +30,8 @@ function Column({
     <Droppable droppableId={column._id}>
       {(provided, snapshot) => (
         <div
-          ref={provided.innerRef}
-          {...provided.droppableProps}
+          // Notice we REMOVED the ref and droppableProps from this outer div!
+          // But we kept the snapshot styling so the whole column still glows when hovered.
           className={`w-96 flex-shrink-0 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-lg border transition-all duration-200 ${
             snapshot.isDraggingOver
               ? "border-blue-500 shadow-lg shadow-blue-500/20 scale-105"
@@ -68,20 +68,9 @@ function Column({
 
                     addTask(column._id, title, priority, dueDate);
 
-                    setNewTitle({
-                      ...newTitle,
-                      [column._id]: "",
-                    });
-
-                    setNewDueDate({
-                      ...newDueDate,
-                      [column._id]: "",
-                    });
-
-                    setNewPriority({
-                      ...newPriority,
-                      [column._id]: "Medium",
-                    });
+                    setNewTitle({ ...newTitle, [column._id]: "" });
+                    setNewDueDate({ ...newDueDate, [column._id]: "" });
+                    setNewPriority({ ...newPriority, [column._id]: "Medium" });
                   }
                 }}
                 className="w-full p-2 mb-2 rounded-lg bg-slate-800 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
@@ -117,8 +106,12 @@ function Column({
               />
             </div>
 
-            {/* Tasks Container */}
-            <div className="space-y-2 min-h-[200px]">
+            {/* Tasks Container - THE FIX IS HERE */}
+            <div 
+              className="space-y-2 min-h-[200px]"
+              ref={provided.innerRef}          // Moved to the actual task list
+              {...provided.droppableProps}     // Moved to the actual task list
+            >
               {columnTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-slate-500">
                   <Plus size={32} className="opacity-50 mb-2" />
